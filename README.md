@@ -1,2 +1,2 @@
 # ITC
-github.io/bluedude/ITC
+bluedude.github.io/ITC
