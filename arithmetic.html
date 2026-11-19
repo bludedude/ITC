@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Factorial, sum, and average of the first N natural numbers" />
+  <title>Arithmetic | CS 1130</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand">CS 1130 <span>Toolkit</span></a>
+      <nav class="nav-links" aria-label="Assignments">
+        <a href="index.html">Home</a>
+        <a href="unit-conversion.html">Unit Conversion</a>
+        <a href="income-tax-calculator.html">Income Tax</a>
+        <a href="arithmetic.html" class="active" aria-current="page">Arithmetic</a>
+        <a href="simple-payroll.html">Simple Payroll</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-header">
+      <span class="badge">Assignment #3</span>
+      <h1>Arithmetic Calculator</h1>
+      <p>Calculate the factorial (While Loop), sum (Do While Loop), and average (For Loop) of the first N natural numbers.</p>
+    </div>
+
+    <div class="two-col-grid">
+      <section class="card">
+        <div class="card-header">
+          <h2>Input Natural Number</h2>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label for="arithmetic-n-input">Enter N (1 to 170)</label>
+            <div class="input-with-badge">
+              <input id="arithmetic-n-input" type="number" min="1" step="1" placeholder="Enter a value for N" aria-label="Natural number N" />
+              <span class="unit-badge">N</span>
+            </div>
+            <p id="arithmetic-help" class="helper-text">Use a positive whole number (1, 2, 3, …).</p>
+          </div>
+
+          <button id="arithmetic-calc-btn" class="btn-primary full-width" type="button">
+            Calculate
+          </button>
+
+          <div class="info-note">
+            <strong>Loop Implementations:</strong>
+            <p>Computes values sequentially from 1 through N using While, Do-While, and For loops.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card result-card">
+        <div class="card-header">
+          <h2>Arithmetic Output</h2>
+          <span class="status-pill">Results</span>
+        </div>
+        <div class="card-body">
+          <div class="metric-list">
+            <div class="metric-item">
+              <div>
+                <strong>Factorial (While Loop)</strong>
+                <small>N! = 1 × 2 × … × N</small>
+              </div>
+              <b id="res-factorial" class="metric-value">—</b>
+            </div>
+
+            <div class="metric-item">
+              <div>
+                <strong>Sum (Do While Loop)</strong>
+                <small>1 + 2 + … + N</small>
+              </div>
+              <b id="res-sum" class="metric-value">—</b>
+            </div>
+
+            <div class="metric-item">
+              <div>
+                <strong>Average (For Loop)</strong>
+                <small>Sum ÷ N</small>
+              </div>
+              <b id="res-average" class="metric-value">—</b>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const inputEl = document.getElementById("arithmetic-n-input");
+      const helpEl = document.getElementById("arithmetic-help");
+      const calcBtn = document.getElementById("arithmetic-calc-btn");
+      const resFactorial = document.getElementById("res-factorial");
+      const resSum = document.getElementById("res-sum");
+      const resAverage = document.getElementById("res-average");
+
+      function handleCalculate() {
+        const n = Number(inputEl.value);
+        if (!Number.isInteger(n) || n < 1 || n > 170) {
+          helpEl.textContent = "Enter a whole number from 1 to 170.";
+          helpEl.classList.add("error");
+          resFactorial.textContent = "—";
+          resSum.textContent = "—";
+          resAverage.textContent = "—";
+          return;
+        }
+
+        let factorial = 1;
+        let factor = 1;
+        while (factor <= n) {
+          factorial *= factor;
+          factor += 1;
+        }
+
+        let sum = 0;
+        let addend = 1;
+        do {
+          sum += addend;
+          addend += 1;
+        } while (addend <= n);
+
+        let total = 0;
+        for (let number = 1; number <= n; number += 1) {
+          total += number;
+        }
+
+        const average = total / n;
+
+        helpEl.textContent = "Use a positive whole number (1, 2, 3, …).";
+        helpEl.classList.remove("error");
+        resFactorial.textContent = factorial.toLocaleString("en-US");
+        resSum.textContent = sum.toLocaleString("en-US");
+        resAverage.textContent = average.toLocaleString("en-US");
+      }
+
+      calcBtn.addEventListener("click", handleCalculate);
+
+      inputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          handleCalculate();
+        }
+      });
+    })();
+  </script>
+</body>
+
+</html>

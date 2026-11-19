@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Simple employee payroll calculator" />
+  <title>Simple Payroll | CS 1130</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand">CS 1130 <span>Toolkit</span></a>
+      <nav class="nav-links" aria-label="Assignments">
+        <a href="index.html">Home</a>
+        <a href="unit-conversion.html">Unit Conversion</a>
+        <a href="income-tax-calculator.html">Income Tax</a>
+        <a href="arithmetic.html">Arithmetic</a>
+        <a href="simple-payroll.html" class="active" aria-current="page">Simple Payroll</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-header">
+      <span class="badge">Assignment #4</span>
+      <h1>Simple Payroll</h1>
+      <p>Add employee records to automatically compute Gross Pay and Net Pay, or remove records by line number.</p>
+    </div>
+
+    <div class="payroll-grid">
+      <section class="card">
+        <div class="card-header">
+          <h2>01 / Employee Details</h2>
+        </div>
+        <div class="card-body">
+          <form id="payroll-form" class="payroll-form">
+            <div class="form-group">
+              <label for="emp-name">Employee Name</label>
+              <input id="emp-name" type="text" pattern="[A-Za-z\s]+" title="Letters and spaces only" placeholder="Enter employee name" required />
+            </div>
+
+            <div class="split-inputs">
+              <div class="form-group">
+                <label for="emp-days">Days Worked</label>
+                <input id="emp-days" type="number" min="0" placeholder="e.g. 22" required />
+              </div>
+              <div class="form-group">
+                <label for="emp-rate">Daily Rate (₱)</label>
+                <input id="emp-rate" type="number" min="0" placeholder="0.00" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="emp-deduction">Deduction Amount (₱)</label>
+              <input id="emp-deduction" type="number" min="0" placeholder="0.00" required />
+            </div>
+
+            <button class="btn-primary full-width" type="submit">Add to Payroll</button>
+          </form>
+
+          <div class="info-note">
+            <strong>Formulas:</strong>
+            <p>Gross Pay = Days Worked × Daily Rate<br />Net Pay = Gross Pay − Deduction</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>Payroll List</h2>
+          <span id="employee-count-badge" class="status-pill">0 EMPLOYEES</span>
+        </div>
+        <div class="card-body">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Employee Name</th>
+                  <th>Days</th>
+                  <th>Daily Rate</th>
+                  <th>Gross Pay</th>
+                  <th>Deduction</th>
+                  <th>Net Pay</th>
+                </tr>
+              </thead>
+              <tbody id="payroll-tbody"></tbody>
+            </table>
+
+            <div id="empty-payroll" class="empty-state">
+              <strong>No payroll records yet</strong>
+              <p>Enter employee details on the left and select "Add to Payroll" to begin.</p>
+            </div>
+          </div>
+
+          <div class="delete-bar">
+            <div class="delete-copy">
+              <strong>Delete a Record</strong>
+              <span>Enter the line number (No.) to remove</span>
+            </div>
+            <div class="delete-controls">
+              <input id="delete-line-input" type="number" min="1" placeholder="Line #" aria-label="Line Number" />
+              <button id="delete-record-btn" class="btn-danger" type="button">Delete</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const money = new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
+        minimumFractionDigits: 2,
+      });
+
+      let records = [];
+
+      const form = document.getElementById("payroll-form");
+      const nameInput = document.getElementById("emp-name");
+      const daysInput = document.getElementById("emp-days");
+      const rateInput = document.getElementById("emp-rate");
+      const deductionInput = document.getElementById("emp-deduction");
+      const tbody = document.getElementById("payroll-tbody");
+      const emptyState = document.getElementById("empty-payroll");
+      const countBadge = document.getElementById("employee-count-badge");
+      const deleteInput = document.getElementById("delete-line-input");
+      const deleteBtn = document.getElementById("delete-record-btn");
+
+      nameInput.addEventListener("input", () => {
+        nameInput.value = nameInput.value.replace(/[^a-zA-Z\s]/g, "");
+      });
+
+      function clearDeleteError() {
+        deleteInput.setCustomValidity("");
+      }
+
+      function showDeleteError(message) {
+        deleteInput.setCustomValidity(message);
+        deleteInput.reportValidity();
+        deleteInput.focus();
+      }
+
+      deleteInput.addEventListener("input", clearDeleteError);
+
+      function escapeHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function render() {
+        countBadge.textContent = `${records.length} ${records.length === 1 ? "EMPLOYEE" : "EMPLOYEES"}`;
+        emptyState.style.display = records.length === 0 ? "block" : "none";
+        tbody.innerHTML = records
+          .map(
+            (rec, idx) => `
+              <tr>
+                <td>${idx + 1}</td>
+                <td>${escapeHtml(rec.name)}</td>
+                <td>${rec.days}</td>
+                <td>${money.format(rec.rate)}</td>
+                <td>${money.format(rec.gross)}</td>
+                <td>${money.format(rec.deduction)}</td>
+                <td><strong>${money.format(rec.net)}</strong></td>
+              </tr>`
+          )
+          .join("");
+      }
+
+      function addRecord() {
+        const cleanName = nameInput.value.replace(/[^a-zA-Z\s]/g, "").trim();
+
+        if (
+          !cleanName ||
+          daysInput.value.trim() === "" ||
+          rateInput.value.trim() === "" ||
+          deductionInput.value.trim() === ""
+        ) {
+          if (!cleanName) {
+            nameInput.value = "";
+            nameInput.focus();
+          }
+          form.reportValidity();
+          return;
+        }
+
+        const dayCount = Math.max(0, Number(daysInput.value));
+        const dailyRate = Math.max(0, Number(rateInput.value));
+        const deductionAmount = Math.max(0, Number(deductionInput.value));
+        const gross = dayCount * dailyRate;
+
+        records.push({
+          name: cleanName,
+          days: dayCount,
+          rate: dailyRate,
+          gross: gross,
+          deduction: deductionAmount,
+          net: gross - deductionAmount,
+        });
+
+        nameInput.value = "";
+        daysInput.value = "";
+        rateInput.value = "";
+        deductionInput.value = "";
+        nameInput.focus();
+        clearDeleteError();
+        render();
+      }
+
+      function deleteRecord() {
+        const rawValue = deleteInput.value.trim();
+
+        if (records.length === 0) {
+          showDeleteError("There are no payroll records to delete.");
+          return;
+        }
+
+        if (rawValue === "") {
+          showDeleteError("Please enter a line number to delete.");
+          return;
+        }
+
+        const lineNumber = Number(rawValue);
+        const index = lineNumber - 1;
+
+        if (!Number.isInteger(lineNumber) || index < 0 || index >= records.length) {
+          showDeleteError(
+            `Line number ${rawValue} was not found. Enter a number from 1 to ${records.length}.`
+          );
+          return;
+        }
+
+        records.splice(index, 1);
+        deleteInput.value = "";
+        clearDeleteError();
+        render();
+      }
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        addRecord();
+      });
+
+      [nameInput, daysInput, rateInput, deductionInput].forEach((input) => {
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addRecord();
+          }
+        });
+      });
+
+      deleteBtn.addEventListener("click", deleteRecord);
+      deleteInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          deleteRecord();
+        }
+      });
+    })();
+  </script>
+</body>
+
+</html>

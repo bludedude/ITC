@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Philippine annual income tax calculator" />
+  <title>Income Tax Calculator | CS 1130</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand">CS 1130 <span>Toolkit</span></a>
+      <nav class="nav-links" aria-label="Assignments">
+        <a href="index.html">Home</a>
+        <a href="unit-conversion.html">Unit Conversion</a>
+        <a href="income-tax-calculator.html" class="active" aria-current="page">Income Tax</a>
+        <a href="arithmetic.html">Arithmetic</a>
+        <a href="simple-payroll.html">Simple Payroll</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-header">
+      <span class="badge">Assignment #2</span>
+      <h1>Income Tax Calculator</h1>
+      <p>Enter your annual net taxable income to compute your income tax based on the progressive tax brackets.</p>
+    </div>
+
+    <div class="tax-grid">
+      <section class="card">
+        <div class="card-header">
+          <h2>Income Tax Table</h2>
+        </div>
+        <div class="card-body">
+          <div class="table-wrapper">
+            <table class="data-table" aria-label="Income tax brackets">
+              <thead>
+                <tr>
+                  <th>Over</th>
+                  <th>But Not Over</th>
+                  <th>Basic Tax + Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>—</td>
+                  <td>₱250,000</td>
+                  <td>0%</td>
+                </tr>
+                <tr>
+                  <td>₱250,000</td>
+                  <td>₱400,000</td>
+                  <td>20% of the excess over ₱250,000</td>
+                </tr>
+                <tr>
+                  <td>₱400,000</td>
+                  <td>₱800,000</td>
+                  <td>₱30,000 + 25% of the excess over ₱400,000</td>
+                </tr>
+                <tr>
+                  <td>₱800,000</td>
+                  <td>₱2,000,000</td>
+                  <td>₱130,000 + 30% of the excess over ₱800,000</td>
+                </tr>
+                <tr>
+                  <td>₱2,000,000</td>
+                  <td>₱8,000,000</td>
+                  <td>₱490,000 + 32% of the excess over ₱2,000,000</td>
+                </tr>
+                <tr>
+                  <td>₱8,000,000</td>
+                  <td>—</td>
+                  <td>₱2,410,000 + 35% of the excess over ₱8,000,000</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">Formula: Income Tax = Basic Tax + (Excess × Rate)</p>
+        </div>
+      </section>
+
+      <div class="stack-column">
+        <section class="card">
+          <div class="card-header">
+            <h2>01 / Yearly Taxable Income</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="tax-income-input">Net Taxable Income (PHP)</label>
+              <div class="input-with-prefix">
+                <span class="prefix-badge">₱</span>
+                <input id="tax-income-input" type="number" min="0" placeholder="Enter taxable income" aria-label="Taxable income" />
+              </div>
+            </div>
+            <button id="compute-tax-btn" class="btn-primary full-width" type="button">
+              Compute Income Tax
+            </button>
+          </div>
+        </section>
+
+        <section class="card result-card">
+          <div class="card-header">
+            <h2>Income Tax Output</h2>
+            <span class="status-pill">Result</span>
+          </div>
+          <div class="card-body">
+            <p class="muted-text">Estimated Annual Tax Due</p>
+            <strong id="tax-result" class="tax-amount">₱ —</strong>
+            <p id="tax-summary" class="helper-text">Enter taxable income to see your result.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const money = new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
+        minimumFractionDigits: 2,
+      });
+
+      function calculateTax(income) {
+        if (income <= 250000) return 0;
+        if (income <= 400000) return (income - 250000) * 0.2;
+        if (income <= 800000) return 30000 + (income - 400000) * 0.25;
+        if (income <= 2000000) return 130000 + (income - 800000) * 0.3;
+        if (income <= 8000000) return 490000 + (income - 2000000) * 0.32;
+        return 2410000 + (income - 8000000) * 0.35;
+      }
+
+      const inputEl = document.getElementById("tax-income-input");
+      const computeBtn = document.getElementById("compute-tax-btn");
+      const resultEl = document.getElementById("tax-result");
+      const summaryEl = document.getElementById("tax-summary");
+
+      function handleCompute() {
+        const val = Math.max(0, Number(inputEl.value) || 0);
+        inputEl.value = val === 0 && inputEl.value === "" ? "" : val;
+        const tax = calculateTax(val);
+        resultEl.textContent = money.format(tax);
+        summaryEl.textContent = `Tax due on ${money.format(val)} taxable income.`;
+      }
+
+      inputEl.addEventListener("keydown", (e) => {
+        if (e.key === "-" || e.key === "+" || e.key.toLowerCase() === "e") {
+          e.preventDefault();
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          handleCompute();
+        }
+      });
+
+      inputEl.addEventListener("input", () => {
+        if (inputEl.value.includes("-")) {
+          inputEl.value = inputEl.value.replace(/-/g, "");
+        }
+        if (Number(inputEl.value) < 0) {
+          inputEl.value = "0";
+        }
+      });
+
+      computeBtn.addEventListener("click", handleCompute);
+    })();
+  </script>
+</body>
+
+</html>
